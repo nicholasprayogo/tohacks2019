@@ -1,21 +1,41 @@
 from bs4 import BeautifulSoup
 import requests
 
+#Chequing Accounts Page
 page = requests.get("https://www.rbcroyalbank.com/accounts/chequing-accounts.html")
 
+#Get HTML content related to Chequing account monthly fees
 soup = BeautifulSoup(page.content, 'html.parser')
 interest = soup.find_all(class_='text-center text-script')
-#fees = list(interest.children)
 
-fee = "$"
+#Get HTML content related to Account Names
+
+
+
+#Parse
 s_string = str(interest)
 
-most_recent_index=s_string.find(fee) #find initial occurence of $ in the string
+most_recent_index=s_string.find("$") #find initial occurence of $ in the string
+starting_position = 0
 
-while most_recent_index != -1:
-    print(s_string.find(fee))
+Account_Names = []
+Monthly_Fees = []  
+
+
+
+while (starting_position > -1):
+    print(most_recent_index)
     print(s_string[most_recent_index:most_recent_index+6])
-    most_recent_index=s_string.find(fee) #find the next occurence to see if there are any more
+    temp = s_string[most_recent_index:most_recent_index+6].replace('<', '')
+    print(temp)
+    Monthly_Fees.append(temp)
+    s_string=s_string[most_recent_index+6:]
+    print(s_string)
+    most_recent_index = s_string.find("$")
+    starting_position = most_recent_index
+
+print(Monthly_Fees)
+
 
 file = open("dump.txt","w+")
 file.write(s_string)
