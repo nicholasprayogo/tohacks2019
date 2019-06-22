@@ -1,0 +1,1 @@
+[<p class="text-center text-script"><span class="text-italic">Monthly Fee: $30.00</span></p>, <p class="text-center text-script"><span class="text-italic">Monthly Fee: $15.95</span></p>, <p class="text-center text-script"><span class="text-italic">Monthly Fee: $10.95</span></p>, <p class="text-center text-script"><span class="text-italic">Monthly Fee: $4.00</span></p>]
