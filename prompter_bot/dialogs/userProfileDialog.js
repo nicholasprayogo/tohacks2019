@@ -162,11 +162,18 @@ class UserProfileDialog extends ComponentDialog {
               ]
             };
 
-            const msg  = await client.database(databaseId).container(containerId).items.query(querySpec);
+            //const msg  = await client.database(databaseId).container(containerId).items.query(querySpec);
             // const { result: results } = await container.items.query(querySpec).toArray();
 
             // await step.context.sendActivity(msg);
-            await console.log(msg);
+            //await console.log(msg);
+
+			const { result: results } = await client.database(databaseId).container(containerId).items.query(querySpec, {enableCrossPartitionQuery:true}).toArray();
+			for (var queryResult of results) {
+				let resultString = JSON.stringify(queryResult);
+				console.log(`\tQuery returned ${resultString}\n`);
+			}
+
         } else {
             console.log("testing2")
             await step.context.sendActivity('Thanks. Your profile will not be kept.');
