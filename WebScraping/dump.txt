@@ -1,1 +1,13 @@
-[<h3 class="h4 text-center text-blue" data-eq-shim="1"><a href="student-banking-no-limit.html">RBC No Limit Banking for Students</a></h3>, <h3 class="h4 text-center text-blue" data-eq-shim="1"><a href="student-banking.html">RBC Student Banking</a></h3>, <h3 class="h4 text-center text-blue" data-eq-shim="1"><a href="leo-young-savers-account.html">RBC Leo’s Young Savers Account</a></h3>]
+[<ul class="disc-list">
+<li>Monthly fee waived for 12 months<sup><a class="scrollto" data-target="#legal-5" href=""><span class="offscreen">legal bug </span>5</a></sup></li>
+<li>Unlimited debit transactions</li>
+<li>Get a $39 rebate toward an eligible RBC Royal Bank credit card<sup><a class="scrollto" data-target="#legal-3" href=""><span class="offscreen">legal bug </span>3</a></sup></li>
+<li>No minimum balance required</li>
+</ul>, <ul class="disc-list">
+<li>25 free debits per month<sup><a class="scrollto" data-target="#legal-2" href=""><span class="offscreen">legal bug </span>2</a></sup></li>
+<li>Get a $39 rebate toward an eligible RBC Royal Bank credit card<sup><a class="scrollto" data-target="#legal-3" href=""><span class="offscreen">legal bug </span>3</a></sup></li>
+<li>No minimum balance required</li>
+</ul>, <ul class="disc-list">
+<li>15 free debits per month<sup><a class="scrollto" data-target="#legal-2" href=""><span class="offscreen">legal bug </span>2</a></sup></li>
+<li>No minimum balance required</li>
+</ul>]
