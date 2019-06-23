@@ -1,5 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+const CosmosClient = require('@azure/cosmos').CosmosClient;
+const config = require('../config');
+
+// const endpoint = config.endpoint;
+// const masterKey = config.primaryKey;
+
+const endpoint = "https://tohacks-sql.documents.azure.com:443/";
+const masterKey = "rVffuZftq16dKAIkAfsh81tdgo2UUjogYtpeSv0WtWGWWogovgjLKtlHBhkq1OKoLkmc5FV9UbpxfLv1hVhVUg==";
+const databaseId = "TOHacks Data"
+const containerId = "Options"
+const client = new CosmosClient({ endpoint: endpoint, auth: { masterKey: masterKey } });
 
 const {
     ChoiceFactory,
@@ -12,6 +23,7 @@ const {
     TextPrompt,
     WaterfallDialog
 } = require('botbuilder-dialogs');
+
 const { UserProfile } = require('../userProfile');
 
 const CHOICE_PROMPT = 'CHOICE_PROMPT';
@@ -35,11 +47,13 @@ class UserProfileDialog extends ComponentDialog {
         this.addDialog(new NumberPrompt(NUMBER_PROMPT, this.agePromptValidator));
 
         this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
+            // this.introStep.bind(this),
             this.ageStep.bind(this),
-            this.studentStep.bind(this),
-            this.paymethodStep.bind(this),
-            this.withdrawStep.bind(this),
-            this.usedebitStep.bind(this),
+            // this.studentStep.bind(this),
+            // this.paymethodStep.bind(this),
+            // this.withdrawStep.bind(this),
+            // this.usedebitStep.bind(this),
+            this.summaryStep.bind(this)
         ]));
 
         this.initialDialogId = WATERFALL_DIALOG;
@@ -51,6 +65,7 @@ class UserProfileDialog extends ComponentDialog {
      * @param {*} turnContext
      * @param {*} accessor
      */
+
     async run(turnContext, accessor) {
         const dialogSet = new DialogSet(accessor);
         dialogSet.add(this);
@@ -62,18 +77,34 @@ class UserProfileDialog extends ComponentDialog {
         }
     }
 
+    // introStep(step) {
+    //     return step.context.sendActivity('Hi. I am Finn.');
+    //   }
+    // async introStep(step){
+    //     await wait(500);
+    //     return step.context.sendActivity('Hi. I am Finn.');
+    // }
+
     async ageStep(step) {
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
-            prompt: 'What is your age?',
-            choices: ChoiceFactory.toChoices(['Under 19', '19-64', '65 & Over'])
+            prompt: 'Which age group do you belong to?',
+            choices: ChoiceFactory.toChoices(['19 and under', '20 and older'])
         });
     }
 
+    // async studentStep(step) {
+    //     step.values.age = step.result.value;
+    //     return await step.prompt(CONFIRM_PROMPT, 'Are you a full-time student?', ['yes', 'no']);
+    // }
+
     async studentStep(step) {
         step.values.age = step.result.value;
-        return await step.prompt(CONFIRM_PROMPT, 'Are you a full-time student?', ['yes', 'no']);
+        return await step.prompt(CHOICE_PROMPT, {
+            prompt: 'Are you a full-time student',
+            choices: ChoiceFactory.toChoices(['Yes', 'No'])
+        });
     }
 
     async paymethodStep(step) {
@@ -81,8 +112,8 @@ class UserProfileDialog extends ComponentDialog {
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
-            prompt: 'How do you mostly pay for things?',
-            choices: ChoiceFactory.toChoices(['Debit', 'Credit', 'Cash', 'Cheque'])
+            prompt: 'How important are e-transfers to you? (5 being important)',
+            choices: ChoiceFactory.toChoices(['1', '2', '3', '4', '5'])
         });
     }
 
@@ -91,8 +122,8 @@ class UserProfileDialog extends ComponentDialog {
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
-            prompt: 'How many times a month do you withdraw money from the ATM?',
-            choices: ChoiceFactory.toChoices(['<30', '>30'])
+            prompt: 'How often would you use your card to pay for things?',
+            choices: ChoiceFactory.toChoices(['Never', 'Sometimes', 'Often'])
         });
     }
 
@@ -101,13 +132,15 @@ class UserProfileDialog extends ComponentDialog {
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
-            prompt: 'How many times a month do you use your debit card?',
-            choices: ChoiceFactory.toChoices(['<30', '>30'])
+            prompt: 'How important is saving to you?',
+            choices: ChoiceFactory.toChoices(['1', '2', '3', '4', '5'])
         });
     }
 
     async summaryStep(step) {
+        console.log("testing")
         if (step.result) {
+            console.log("testing");
             // Get the current profile object from user state.
             const userProfile = await this.userProfile.get(step.context, new UserProfile());
 
@@ -116,13 +149,26 @@ class UserProfileDialog extends ComponentDialog {
             userProfile.paymentmethod = step.values.payment;
             userProfile.withdraw = step.values.withdraw;
             userProfile.usedebit = step.values.usedebit;
-            let msg = `Your age is ${ userProfile.age }, your most used payment method is ${ userProfile.paymentmethod } .`;
-            if (userProfile.age !== -1) {
-                msg += ` And age as ${ userProfile.age }.`;
-            }
+            // const { body: databaseDefinition } = await client.database(databaseId).read();
+            // let msg = `Your age is ${ userProfile.age }, your most used payment method is ${ userProfile.paymentmethod } .`;
 
-            await step.context.sendActivity(msg);
+            const querySpec = {
+               query: "SELECT * FROM Families c WHERE c.type = @type",
+               parameters: [
+                  {
+                    name: "@type",
+                    value: "youth"
+                  }
+              ]
+            };
+
+            const msg  = await client.database(databaseId).container(containerId).items.query(querySpec);
+            // const { result: results } = await container.items.query(querySpec).toArray();
+
+            // await step.context.sendActivity(msg);
+            await console.log(msg);
         } else {
+            console.log("testing2")
             await step.context.sendActivity('Thanks. Your profile will not be kept.');
         }
 
