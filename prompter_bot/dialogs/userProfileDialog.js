@@ -47,12 +47,12 @@ class UserProfileDialog extends ComponentDialog {
         this.addDialog(new NumberPrompt(NUMBER_PROMPT, this.agePromptValidator));
 
         this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
-            // this.introStep.bind(this),
+            //this.introStep.bind(this),
             this.ageStep.bind(this),
-            // this.studentStep.bind(this),
-            // this.paymethodStep.bind(this),
-            // this.withdrawStep.bind(this),
-            // this.usedebitStep.bind(this),
+            this.studentStep.bind(this),
+            this.etransferStep.bind(this),
+            this.paymentStep.bind(this),
+            this.savingStep.bind(this),
             this.summaryStep.bind(this)
         ]));
 
@@ -107,18 +107,18 @@ class UserProfileDialog extends ComponentDialog {
         });
     }
 
-    async paymethodStep(step) {
+    async etransferStep(step) {
         step.values.student = step.result.value;
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
-            prompt: 'How important are e-transfers to you? (5 being important)',
-            choices: ChoiceFactory.toChoices(['1', '2', '3', '4', '5'])
+            prompt: 'How often would you want to e-transfer',
+            choices: ChoiceFactory.toChoices(['Never', 'Sometimes', 'Often'])
         });
     }
 
-    async withdrawStep(step) {
-        step.values.payment = step.result.value;
+    async paymentStep(step) {
+        step.values.etransfer = step.result.value;
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
@@ -127,8 +127,8 @@ class UserProfileDialog extends ComponentDialog {
         });
     }
 
-    async usedebitStep(step) {
-        step.values.withdraw = step.result.value;
+    async savingStep(step) {
+        step.values.payment = step.result.value;
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
@@ -146,20 +146,40 @@ class UserProfileDialog extends ComponentDialog {
 
             userProfile.age = step.values.age;
             userProfile.student = step.values.student;
-            userProfile.paymentmethod = step.values.payment;
-            userProfile.withdraw = step.values.withdraw;
-            userProfile.usedebit = step.values.usedebit;
+            userProfile.etransfer = step.values.etransfer;
+            userProfile.payment = step.values.payment;
+            userProfile.saving = step.values.saving;
             // const { body: databaseDefinition } = await client.database(databaseId).read();
             // let msg = `Your age is ${ userProfile.age }, your most used payment method is ${ userProfile.paymentmethod } .`;
 
+			let general_query = "SELECT * FROM Options c ";
+
+			if(userProfile.student == "Yes") {
+				general_query += "WHERE c.type = @student ";
+				if(userProfile.etransfer == "Often") {
+					general_query += "AND c.etrans_num = @unlimited " ;
+					if(userProfile.payment == "Often") {
+						general_query += "AND c.trans_num = @unlimited";
+					}
+				}
+			}
+			
+			console.log(general_query);
+
+
             const querySpec = {
-               query: "SELECT * FROM Families c WHERE c.type = @type",
-               parameters: [
+               //query: "SELECT * FROM Options c WHERE c.type = @type",
+               query: general_query,
+			    parameters: [
                   {
-                    name: "@type",
-                    value: "youth"
-                  }
-              ]
+                    name: "@student",
+                    value: "student"
+                  },
+				  {
+                    name: "@unlimited",
+                    value: "unlimited"
+				  },
+				]
             };
 
             //const msg  = await client.database(databaseId).container(containerId).items.query(querySpec);
@@ -168,11 +188,11 @@ class UserProfileDialog extends ComponentDialog {
             // await step.context.sendActivity(msg);
             //await console.log(msg);
 
-			const { result: results } = await client.database(databaseId).container(containerId).items.query(querySpec, {enableCrossPartitionQuery:true}).toArray();
-			for (var queryResult of results) {
-				let resultString = JSON.stringify(queryResult);
-				console.log(`\tQuery returned ${resultString}\n`);
-			}
+			 const { result: results } = await client.database(databaseId).container(containerId).items.query(querySpec, {enableCrossPartitionQuery:true}).toArray();
+			 for (var queryResult of results) {
+				 let resultString = JSON.stringify(queryResult);
+				 console.log(`\tQuery returned ${resultString}\n`);
+			 }
 
         } else {
             console.log("testing2")
