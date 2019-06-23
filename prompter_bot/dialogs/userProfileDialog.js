@@ -163,13 +163,13 @@ class UserProfileDialog extends ComponentDialog {
 					}
 				}
 			}
-			
+
 			console.log(general_query);
 
 
-            const querySpec = {
+      const querySpec = {
                //query: "SELECT * FROM Options c WHERE c.type = @type",
-               query: general_query,
+          query: general_query,
 			    parameters: [
                   {
                     name: "@student",
@@ -189,17 +189,30 @@ class UserProfileDialog extends ComponentDialog {
             //await console.log(msg);
 
 			 const { result: results } = await client.database(databaseId).container(containerId).items.query(querySpec, {enableCrossPartitionQuery:true}).toArray();
-			 for (var queryResult of results) {
-				 let resultString = JSON.stringify(queryResult);
-				 console.log(`\tQuery returned ${resultString}\n`);
-			 }
 
+       // for (var queryResult of results) {
+				//  let resultString = JSON.stringify(queryResult);
+       //   let account_name = resultString.name;
+       //   let account_link = resultString.link;
+				 // console.log(`\tQuery returned ${resultString}\n`);
+			 // }
+       let resultString = results[0] ;
+       // console.log(queryResult);
+       // let resultString = JSON.stringify(queryResult);
+       console.log(resultString);
+       let account_name = resultString["name"];
+       console.log(account_name);
+       let account_link = resultString["link"];
+       console.log(account_link);
+       await step.context.sendActivity(`Best option is ${account_name}`);
+       await step.context.sendActivity(`Sign up here ${account_link}`);
         } else {
             console.log("testing2")
             await step.context.sendActivity('Thanks. Your profile will not be kept.');
         }
 
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog, here it is the end.
+
         return await step.endDialog();
     }
 
