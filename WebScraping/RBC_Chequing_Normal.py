@@ -11,11 +11,13 @@ page = requests.get("https://www.rbcroyalbank.com/accounts/chequing-accounts.htm
 
 #Get HTML Content related to Chequing Account Names
 soup = BeautifulSoup(page.content, 'html.parser')
-ok = soup.find_all(class_='h4 text-center')
-stringo = str(ok)
+info = soup.find_all()
+
+accounts = soup.find_all(class_='h4 text-center')
+stringo = str(accounts)
 #debugging
 file = open("dump.txt","w+")
-file.write(stringo)
+file.write(soup)
 file.close 
 start = stringo.find('RBC') 
 counter = 0
@@ -28,10 +30,10 @@ while (start > -1):
     else:
         end = stringo.find('</h3>') #find first occurence of the closing charachters
     
-    print("What I found: " + stringo[start:end])
+    #print("What I found: " + stringo[start:end])
     temp = stringo[start:end]
     if not temp.strip():
-        print(temp)
+        #print(temp)
         Account_Names.append(temp)
 
     stringo=stringo[end+1:] #start new substring from the end of the previous
