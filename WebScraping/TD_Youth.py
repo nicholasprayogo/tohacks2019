@@ -31,63 +31,60 @@ Etransfer_Fees = [] #overage fees
 Interest = [] #what is the monthly interest
 
 #RBC Chequing Account webpage for Youth & Student
-page = requests.get("https://www.cibc.com/en/student/bank-accounts.html")
-link = "https://www.cibc.com/en/student/bank-accounts.html"
+page = requests.get("https://www.td.com/ca/en/personal-banking/products/bank-accounts/savings-accounts/youth-account/")
+link = "https://www.td.com/ca/en/personal-banking/products/bank-accounts/savings-accounts/youth-account/"
 #Get HTML Content related to Chequing Account Names
 soup = BeautifulSoup(page.content, 'html.parser')
-ok = soup.find_all(class_='banner-headline-xl')
+ok = soup.find_all(class_="td-container")
 stringo = str(ok)
 
-start = stringo.find("CIBC")
-temp = stringo[start:]
+debits = stringo.split(',') #split into array for each type of account
 
-end = temp.find("<")
-k = temp[:end-1] #first half of the name
-k2=temp[end-1:]
-start = k2.find(">")
-temp = k2[start+1:]
-end = temp.find("<")
-k2 = temp[:end] 
-k= k + " " + k2
-k=str(k)
+temp = debits[0]
+if('class="td-container"' in temp ):
+    start = stringo.find('core" typeof="tri:BannerProduct">')
+    temp = stringo[start+31:]
+    start = temp.find('TD')
+    temp = temp[start:]
+    end = temp.find("nt")
+    Account_Names.append(temp[:end+2])
 
-if("Youth" in k):
+if("Youth" in temp[:end+2]):
     Account_Type.append("youth")
 else:
     Account_Type.append("student")
 
-Account_Names.append(k)
+Interest.append("0.05")
 
-Interest.append("0")
-ok = soup.find_all(class_='banner-body-copy')
+ok = soup.find_all(class_="td-rte-margin-bottom-medium")
 stringo = str(ok)
-debits = stringo.split(',') #split into array for each type of account
 
-i=0
-while i < len(debits):
-    temp = debits[i]
-    if("transactions"in debits[i]):
-        temp = debits[i]
+if("transactions"in stringo):
+        temp = stringo
         if("unlimited" in temp):
             Debit_Type.append("unlimited")
             Debit_Fees.append("0")
-        if("e-Transfer" in temp):
             Etransfer_Fees.append("0")
             Etransfers.append("unlimited")
 
-    if("fee" in debits[i]):
-        temp = debits[i]
-        ok=temp.find("no monthly fee")
-        ok2 = temp[ok-20:ok+20]
-        if(len(Monthly_Fees)==0):
-            if("no" in ok2):
-                Monthly_Fees.append("no")
-            else:
-                Monthly_Fees.append("yes")
-
-    i=i+1
+if("fee" in stringo):
+    temp = stringo
+    ok=temp.find("transaction fees")
+    ok2 = temp[ok-20:ok+20]
+    if(len(Monthly_Fees)==0):
+        if("no" in ok2):
+            Monthly_Fees.append("no")
+        else:
+            Monthly_Fees.append("yes")
 
 
+#print(Monthly_Fees)
+#print(Debit_Fees)
+#print(Debit_Type)
+#print(Etransfer_Fees)
+#print(Etransfers)
+#print(Account_Names)
+#print(Interest)
 #debugging
 #file = open("dump","w+")
 #file.write(stringo)
@@ -111,5 +108,3 @@ while ( j < len(Account_Names)):
     j=j+1
     #After creating the json, upload the object to the database
     client.CreateItem(collection_link,data) #upload the data to the database
-
-
