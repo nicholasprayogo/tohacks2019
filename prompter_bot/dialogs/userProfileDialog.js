@@ -85,7 +85,7 @@ class UserProfileDialog extends ComponentDialog {
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
-            prompt: 'Which age group do you belong to?',
+            prompt: "Perfect, you came to the right person! I'm Finn and I can help you choose the bank account that suits you best. Let's get started. \n Which age group do you belong to?",
             choices: ChoiceFactory.toChoices(['19 and under', '20 and older'])
         });
     }
@@ -300,10 +300,10 @@ class UserProfileDialog extends ComponentDialog {
         return await step.endDialog();
     }
 
-    async agePromptValidator(promptContext) {
-        // This condition is our validation rule. You can also change the value at this point.
-        return promptContext.recognized.succeeded && promptContext.recognized.value > 0 && promptContext.recognized.value < 150;
-    }
+    // async agePromptValidator(promptContext) {
+    //     // This condition is our validation rule. You can also change the value at this point.
+    //     return promptContext.recognized.succeeded && promptContext.recognized.value > 0 && promptContext.recognized.value < 150;
+    // }
 }
 
 module.exports.UserProfileDialog = UserProfileDialog;
