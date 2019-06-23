@@ -201,18 +201,51 @@ class UserProfileDialog extends ComponentDialog {
        // let resultString = JSON.stringify(queryResult);
        console.log(resultString);
        let account_name = resultString["name"];
-       console.log(account_name);
+       // console.log(account_name);
        let account_link = resultString["link"];
-       console.log(account_link);
-       await step.context.sendActivity(`Best option is ${account_name}`);
-       await step.context.sendActivity(`Sign up here ${account_link}`);
-        } else {
-            console.log("testing2")
-            await step.context.sendActivity('Thanks. Your profile will not be kept.');
+       // console.log(account_link);
+       let transnum = resultString["trans_num"];
+       let etransnum = resultString["etrans_num"];
+       let transfee = resultString["trans_fee"];
+       let etransfee = resultString["etrans_fee"];
+       let interest = resultString["interest"];
+
+       await step.context.sendActivity(`Your best option is ${account_name}`);
+
+       let message = ``;
+
+       // check trans
+       if( transnum == "unlimited"){
+         message += `You get unlimited debit transactions, `;
+       }else if (transnum != "0"){
+         message += `You pay ${transfee} per debit transaction after ${transnum} free transactions per month, `;
+       }else {
+         message += `You pay ${transfee} per debit transaction, `;
+       }
+
+       // check etrans
+      if( etransnum == "unlimited"){
+         message += `get unlimited etransfers, `;
+       }else if (transnum != "0"){
+         message += `pay ${etransfee} per etransfer after ${etransnum} free etransfers per month, `;
+       }else {
+         message += `pay ${etransfee} per etransfer, `;
+       }
+
+       // check interest
+       if( interest == "0"){
+          message += `with no interest on your average daily balance.`
+        }else{
+          message += `with ${interest} interest on your average daily balance.`
         }
 
+        await step.context.sendActivity(`${message}`);
+        await step.context.sendActivity(`Sign up here ${account_link}`);
+        } else {
+            console.log("testing2")
+            await step.context.sendActivity('Thanks.');
+        }
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog, here it is the end.
-
         return await step.endDialog();
     }
 
