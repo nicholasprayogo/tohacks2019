@@ -33,7 +33,10 @@ const NUMBER_PROMPT = 'NUMBER_PROMPT';
 const USER_PROFILE = 'USER_PROFILE';
 const WATERFALL_DIALOG = 'WATERFALL_DIALOG';
 
+
+
 class UserProfileDialog extends ComponentDialog {
+
     constructor(userState, logger) {
         super('userProfileDialog');
 
@@ -53,6 +56,7 @@ class UserProfileDialog extends ComponentDialog {
             this.etransferStep.bind(this),
             this.paymentStep.bind(this),
             this.savingStep.bind(this),
+            this.tiebreakStep.bind(this),
             this.summaryStep.bind(this)
         ]));
 
@@ -77,14 +81,6 @@ class UserProfileDialog extends ComponentDialog {
         }
     }
 
-    // introStep(step) {
-    //     return step.context.sendActivity('Hi. I am Finn.');
-    //   }
-    // async introStep(step){
-    //     await wait(500);
-    //     return step.context.sendActivity('Hi. I am Finn.');
-    // }
-
     async ageStep(step) {
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
@@ -94,15 +90,10 @@ class UserProfileDialog extends ComponentDialog {
         });
     }
 
-    // async studentStep(step) {
-    //     step.values.age = step.result.value;
-    //     return await step.prompt(CONFIRM_PROMPT, 'Are you a full-time student?', ['yes', 'no']);
-    // }
-
     async studentStep(step) {
         step.values.age = step.result.value;
         return await step.prompt(CHOICE_PROMPT, {
-            prompt: 'Are you a full-time student',
+            prompt: 'Are you a full-time student?',
             choices: ChoiceFactory.toChoices(['Yes', 'No'])
         });
     }
@@ -112,7 +103,7 @@ class UserProfileDialog extends ComponentDialog {
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
-            prompt: 'How often would you want to e-transfer',
+            prompt: 'How often do you think you\'d need to e-transfer money?',
             choices: ChoiceFactory.toChoices(['Never', 'Sometimes', 'Often'])
         });
     }
@@ -122,8 +113,8 @@ class UserProfileDialog extends ComponentDialog {
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
-            prompt: 'How often would you use your card to pay for things?',
-            choices: ChoiceFactory.toChoices(['Never', 'Sometimes', 'Often'])
+            prompt: 'How often do you see yourself buying stuff with this account?',
+            choices: ChoiceFactory.toChoices(['Only when I need to', 'All the time'])
         });
     }
 
@@ -132,12 +123,21 @@ class UserProfileDialog extends ComponentDialog {
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
-            prompt: 'How important is saving to you?',
-            choices: ChoiceFactory.toChoices(['1', '2', '3', '4', '5'])
+            prompt: 'Do you need to save for anything right now?',
+            choices: ChoiceFactory.toChoices(['Not really', 'It\'d be nice', 'Absolutely'])
         });
     }
 
+	async tiebreakStep(step) {
+        step.values.savings = step.result.value;
+		return await step.prompt(CHOICE_PROMPT, {
+			prompt: 'If you HAD to drop one, which would you pick?',
+			choices: ChoiceFactory.toChoices(['Sending eTransfers', 'Making Purchases', 'Saving Money'])
+		});
+	}
+
     async summaryStep(step) {
+        step.values.tiebreak = step.result.value;
         console.log("testing")
         if (step.result) {
             console.log("testing");
@@ -148,19 +148,57 @@ class UserProfileDialog extends ComponentDialog {
             userProfile.student = step.values.student;
             userProfile.etransfer = step.values.etransfer;
             userProfile.payment = step.values.payment;
-            userProfile.saving = step.values.saving;
-            // const { body: databaseDefinition } = await client.database(databaseId).read();
-            // let msg = `Your age is ${ userProfile.age }, your most used payment method is ${ userProfile.paymentmethod } .`;
+            userProfile.savings = step.values.savings;
+            userProfile.tiebreak = step.values.tiebreaker;
 
-			let general_query = "SELECT * FROM Options c ";
+			let selectLine = "SELECT * FROM Options c ";
+			let general_query = "";
+			let etransLine = "";
+			let transLine = "";
+			let savingsLine = "";
+			let typeLine = "";
+			let count = 0;
 
+			// Student
 			if(userProfile.student == "Yes") {
-				general_query += "WHERE c.type = @student ";
-				if(userProfile.etransfer == "Often") {
-					general_query += "AND c.etrans_num = @unlimited " ;
-					if(userProfile.payment == "Often") {
-						general_query += "AND c.trans_num = @unlimited";
-					}
+				typeLine = "WHERE c.type = @student ";
+			}
+			// Non-student; under 19
+			else if(userProfile.age == "19 and under") {
+				typeLine = "WHERE c.type = @youth ";
+			}
+			// Non-student; over 20
+			else {
+				typeLine = "WHERE c.type = @nonstudent ";
+			}
+
+			// Really wants etransfers
+			if(userProfile.etransfer == "Often") {
+				count++;
+				etransLine = "AND c.etrans_num = @unlimited " ;
+			}
+
+			// Really wants to use card for transactions
+			if(userProfile.payment == "All the time") {
+				count++;
+				transLine = "AND c.trans_num = @unlimited ";
+			}
+
+			// Really wants to save money
+			if(userProfile.savings == "Absolutely") {
+				count++;
+				savingsLine = "AND c.savings != @none ";
+			}
+
+			// If there's a tie
+			if(count == 3){
+
+				if(userProfile.tiebreak == "Sending eTransfers") {
+					general_query =  selectLine + typeLine + savingsLine + transLine;
+				} else if(userProfile.tiebreak == "Saving Money") {
+					general_query =  selectLine + typeLine + etransLine + transLine;
+				} else {
+					general_query =  selectLine + typeLine + etransLine + savingsLine;
 				}
 			}
 
@@ -178,6 +216,10 @@ class UserProfileDialog extends ComponentDialog {
 				  {
                     name: "@unlimited",
                     value: "unlimited"
+				  },
+				  {
+                    name: "@none",
+                    value: "0"
 				  },
 				]
             };
