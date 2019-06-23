@@ -31,11 +31,11 @@ Etransfer_Fees = [] #overage fees
 Interest = [] #what is the monthly interest
 
 #RBC Chequing Account webpage for Youth & Student
-page = requests.get("http://www.scotiabank.com/ca/en/personal/bank-accounts/students/getting-there-savings-program-youth.html")
-link = "http://www.scotiabank.com/ca/en/personal/bank-accounts/students/getting-there-savings-program-youth.html"
+page = requests.get("http://www.scotiabank.com/ca/en/personal/bank-accounts/students/student-banking-advantage-plan.html")
+link = "http://www.scotiabank.com/ca/en/personal/bank-accounts/students/student-banking-advantage-plan.html"
 #Get HTML Content related to Chequing Account Names
 soup = BeautifulSoup(page.content, 'html.parser')
-ok = soup.find_all(class_="bns--title title--h1")
+ok = soup.find_all(class_="bns--table table--striped")
 stringo = str(ok)
 
 debits = stringo.split(',') #split into array for each type of account
@@ -45,11 +45,11 @@ while(i < len(debits)):
     i=i+1
 
     if("transactions"in stringo):
-        ok=stringo.find("monthly fees")
+        ok=stringo.find("monthly fee")
         temp = stringo[ok-10:ok+30]
         #print(temp)
         if len(Monthly_Fees) < 1:
-            if("free" in temp):
+            if("no" in temp):
                 Monthly_Fees.append("no")
             else:
                 Monthly_Fees.append("yes")
@@ -57,18 +57,20 @@ while(i < len(debits)):
             ok=stringo.find("first")
             temp = stringo[ok+10:ok+15]
 
-            Debit_Type.append(temp)
+            
 
-            ok=stringo.find("additional transactions")
-            temp = stringo[ok+3:ok+15]
+            ok=stringo.find("transactions")
+            temp = stringo[ok-20:ok]
             temp = str(temp)
-       
-            Debit_Fees.append(temp)
+            if("Unlimited" in temp):    
+                Debit_Fees.append("0")
+                Debit_Type.append("unlimited")
+            
     
-            ok=stringo.find("transfer fee")
-            temp = stringo[ok-20:ok+20]
+            ok=stringo.find("Interac e-Transfers")
+            temp = stringo[ok-25:ok+20]
            
-            if("No" in temp):    
+            if("Unlimited" in temp):    
                 Etransfer_Fees.append("0")
                 Etransfers.append("unlimited")
 
@@ -76,6 +78,8 @@ while(i < len(debits)):
                 temp = stringo
                 ok=temp.find("monthly fees")
                 ok2 = temp[ok-20:ok+20]
+                if("no" in ok2):
+                    Monthly_Fees.append("0")
         
 
 temp = debits[0]
@@ -105,14 +109,14 @@ data = ObjDict()
 
 j=0
 while ( j < len(Account_Names)):
-    data['name']=str("Getting There Savings Account")
-    data['type']=str("youth")
+    data['name']=str("Student Banking Advantage Plan")
+    data['type']=str("student")
     data['monthly_fee']=str("0")
     data['etrans_num']=str("unlimited")
     data['etrans_fee']= str("0")
-    data['trans_num']= str("2")
-    data['trans_fee']=str("1.25")
-    data['interest']=str("0.05")
+    data['trans_num']= str("unlimited")
+    data['trans_fee']=str("0")
+    data['interest']=str("0")
     data['link']=link
     #json_data = data.dumps()
     j=j+1

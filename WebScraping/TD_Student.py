@@ -52,7 +52,7 @@ while(i < len(debits)):
             if("no" in temp):
                 Monthly_Fees.append("yes")
             else:
-                Monthly_Fees.append("no")
+                Monthly_Fees.append("0")
 
             ok=stringo.find("first")
             temp = stringo[ok+6:ok+8]
