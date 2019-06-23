@@ -16,6 +16,7 @@
         "url": "https://github.com/Microsoft/BotBuilder-Samples.git"
     },
     "dependencies": {
+        "@azure/cosmos": "^2.1.6",
         "botbuilder": "~4.4.0",
         "botbuilder-dialogs": "~4.4.0",
         "dotenv": "^6.1.0",

@@ -2,10 +2,12 @@
 // Licensed under the MIT License.
 
 class UserProfile {
-    constructor(transport, name, age) {
-        this.transport = transport;
-        this.name = name;
+    constructor(withdraw, usedebit, age, paymentmethod, student) {
+        this.withdraw = withdraw;
+        this.usedebit = usedebit;
         this.age = age;
+        this.paymentmethod = paymentmethod;
+        this.student = student;
     }
 }
 
