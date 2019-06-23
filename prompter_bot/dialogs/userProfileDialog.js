@@ -85,7 +85,7 @@ class UserProfileDialog extends ComponentDialog {
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CHOICE_PROMPT, {
-            prompt: 'Which age group do you belong to?',
+            prompt: "Perfect, you came to the right person! I'm Finn and I can help you choose the bank account that suits you best. Let's get started. \n Which age group do you belong to?",
             choices: ChoiceFactory.toChoices(['19 and under', '20 and older'])
         });
     }
@@ -149,7 +149,7 @@ class UserProfileDialog extends ComponentDialog {
             userProfile.etransfer = step.values.etransfer;
             userProfile.payment = step.values.payment;
             userProfile.savings = step.values.savings;
-            userProfile.tiebreak = step.values.tiebreaker;
+            userProfile.tiebreak = step.values.tiebreak;
 
 			let selectLine = "SELECT * FROM Options c ";
 			let general_query = "";
@@ -200,7 +200,9 @@ class UserProfileDialog extends ComponentDialog {
 				} else {
 					general_query =  selectLine + typeLine + etransLine + savingsLine;
 				}
-			}
+			}else {
+        general_query =  selectLine + typeLine + transLine + etransLine + savingsLine;
+      }
 
 			console.log(general_query);
 
@@ -238,51 +240,58 @@ class UserProfileDialog extends ComponentDialog {
        //   let account_link = resultString.link;
 				 // console.log(`\tQuery returned ${resultString}\n`);
 			 // }
-       let resultString = results[0] ;
-       // console.log(queryResult);
-       // let resultString = JSON.stringify(queryResult);
-       console.log(resultString);
-       let account_name = resultString["name"];
-       // console.log(account_name);
-       let account_link = resultString["link"];
-       // console.log(account_link);
-       let transnum = resultString["trans_num"];
-       let etransnum = resultString["etrans_num"];
-       let transfee = resultString["trans_fee"];
-       let etransfee = resultString["etrans_fee"];
-       let interest = resultString["interest"];
 
-       await step.context.sendActivity(`Your best option is ${account_name}`);
+      console.log(results);
+       if (results.length == 0 ){
+           await step.context.sendActivity("No results. Try again");
+       } else {
+                let resultString = results[0] ;
+                // console.log(queryResult);
+                // let resultString = JSON.stringify(queryResult);
+                // console.log(resultString);
+                let account_name = resultString["name"];
+                // console.log(account_name);
+                let account_link = resultString["link"];
+                // console.log(account_link);
+                let transnum = resultString["trans_num"];
+                let etransnum = resultString["etrans_num"];
+                let transfee = resultString["trans_fee"];
+                let etransfee = resultString["etrans_fee"];
+                let interest = resultString["interest"];
 
-       let message = ``;
+                await step.context.sendActivity(`Your best option is ${account_name}`);
 
-       // check trans
-       if( transnum == "unlimited"){
-         message += `You get unlimited debit transactions, `;
-       }else if (transnum != "0"){
-         message += `You pay ${transfee} per debit transaction after ${transnum} free transactions per month, `;
-       }else {
-         message += `You pay ${transfee} per debit transaction, `;
-       }
+                let message = ``;
 
-       // check etrans
-      if( etransnum == "unlimited"){
-         message += `get unlimited etransfers, `;
-       }else if (transnum != "0"){
-         message += `pay ${etransfee} per etransfer after ${etransnum} free etransfers per month, `;
-       }else {
-         message += `pay ${etransfee} per etransfer, `;
-       }
+                // check trans
+                if( transnum == "unlimited"){
+                  message += `You get unlimited debit transactions, `;
+                }else if (transnum != "0"){
+                  message += `You pay ${transfee} per debit transaction after ${transnum} free transactions per month, `;
+                }else {
+                  message += `You pay ${transfee} per debit transaction, `;
+                }
 
-       // check interest
-       if( interest == "0"){
-          message += `with no interest on your average daily balance.`
-        }else{
-          message += `with ${interest} interest on your average daily balance.`
-        }
+                // check etrans
+               if( etransnum == "unlimited"){
+                  message += `unlimited etransfers, `;
+                }else if (transnum != "0"){
+                  message += `pay ${etransfee} per etransfer after ${etransnum} free etransfers per month, `;
+                }else {
+                  message += `pay ${etransfee} per etransfer, `;
+                }
 
-        await step.context.sendActivity(`${message}`);
-        await step.context.sendActivity(`Sign up here ${account_link}`);
+                // check interest
+                if( interest == "0"){
+                   message += `with no interest on your average daily balance.`
+                 }else{
+                   message += `with ${interest} interest on your average daily balance.`
+                 }
+
+                 await step.context.sendActivity(`${message}`);
+                 await step.context.sendActivity(`You can check it out here ${account_link}`);
+               }
+
         } else {
             console.log("testing2")
             await step.context.sendActivity('Thanks.');
@@ -291,10 +300,10 @@ class UserProfileDialog extends ComponentDialog {
         return await step.endDialog();
     }
 
-    async agePromptValidator(promptContext) {
-        // This condition is our validation rule. You can also change the value at this point.
-        return promptContext.recognized.succeeded && promptContext.recognized.value > 0 && promptContext.recognized.value < 150;
-    }
+    // async agePromptValidator(promptContext) {
+    //     // This condition is our validation rule. You can also change the value at this point.
+    //     return promptContext.recognized.succeeded && promptContext.recognized.value > 0 && promptContext.recognized.value < 150;
+    // }
 }
 
 module.exports.UserProfileDialog = UserProfileDialog;

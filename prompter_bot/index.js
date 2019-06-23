@@ -10,7 +10,8 @@ const { BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } = req
 // Import our custom bot class that provides a turn handling function.
 const { DialogBot } = require('./bots/dialogBot');
 const { UserProfileDialog } = require('./dialogs/userProfileDialog');
-
+const { WelcomeBot } = require('./bots/welcomeBot');
+const { QnABot } = require('./bots/QnABot');
 // Read environment variables from .env file
 const ENV_FILE = path.join(__dirname, '.env');
 require('dotenv').config({ path: ENV_FILE });
@@ -47,7 +48,8 @@ const logger = console;
 // Create the main dialog.
 const dialog = new UserProfileDialog(userState, logger);
 const bot = new DialogBot(conversationState, userState, dialog, logger);
-
+const welcome_bot = new WelcomeBot(userState);
+const qa_bot = new QnABot(logger);
 // Create HTTP server.
 let server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function() {
@@ -58,7 +60,12 @@ server.listen(process.env.port || process.env.PORT || 3978, function() {
 // Listen for incoming requests.
 server.post('/api/messages', (req, res) => {
     adapter.processActivity(req, res, async (context) => {
+        await welcome_bot.run(context);
         // Route the message to the bot's main handler.
         await bot.run(context);
+        adapter.processActivity(req, res, async (turnContext) => {
+        // route to bot activity handler.
+        await qa_bot.run(turnContext);
+        };
     });
 });
